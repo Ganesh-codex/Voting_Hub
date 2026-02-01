@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voting App - Democratic Voting Platform</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Enhanced Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo-icon-wrapper">
+            <i class="fas fa-vote-yea logo-icon"></i>
+          </div>
+          <div class="logo-text">
+            <h1>Vote Hub</h1>
+            <p class="tagline">Secure Democratic Voting Platform</p>
+          </div>
+        </div>
+        <div id="userPanel" class="user-panel hidden">
+          <div class="user-info">
+            <i class="fas fa-user-circle user-avatar"></i>
+            <div class="user-details">
+              <span id="userName" class="user-name"></span>
+              <span id="userRole" class="user-role"></span>
+            </div>
+          </div>
+          <button id="logoutBtn" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Enhanced Role Selection Screen -->
+      <section id="roleSelect" class="card role-select-card center">
+        <div class="role-select-content">
+          <div class="role-select-icon">
+            <i class="fas fa-poll"></i>
+          </div>
+          <h2>Welcome to Vote Hub</h2>
+          <p class="role-subtitle">Select your role to access the voting platform</p>
+          <div class="role-buttons">
+            <button id="roleVoter" class="btn btn-voter">
+              <i class="fas fa-check-circle"></i>
+              <span>I'm a Voter</span>
+              <small>Cast your democratic vote</small>
+            </button>
+            <button id="roleAdmin" class="btn btn-admin">
+              <i class="fas fa-shield-alt"></i>
+              <span>I'm an Admin</span>
+              <small>Manage voting system</small>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Enhanced Authentication Screen -->
+      <section id="auth" class="card auth-card hidden">
+        <div class="auth-container">
+          <div class="auth-header">
+            <div class="auth-icon">
+              <i class="fas fa-lock"></i>
+            </div>
+            <h2 id="roleLabel">Login to Your Account</h2>
+            <p>Secure authentication with your credentials</p>
+          </div>
+          <form id="loginForm" class="auth-form">
+            <div class="form-group">
+              <label for="aadhar">
+                <i class="fas fa-id-card"></i> Aadhar Card Number
+              </label>
+              <div class="input-wrapper">
+                <input type="text" id="aadhar" placeholder="Enter your 12-digit Aadhar number" maxlength="12" />
+                <span class="input-icon"><i class="fas fa-check-circle"></i></span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password">
+                <i class="fas fa-lock"></i> Password
+              </label>
+              <div class="input-wrapper">
+                <input type="password" id="password" placeholder="Enter your password" />
+                <span class="input-icon"><i class="fas fa-key"></i></span>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+              <i class="fas fa-sign-in-alt"></i> Secure Login
+            </button>
+          </form>
+          <div id="loginMsg" class="message-box"></div>
+        </div>
+      </section>
+
+      <div class="main-content hidden" id="mainContent">
+        <!-- Enhanced Candidates Section -->
+        <section id="candidates" class="card candidates-card hidden">
+          <div class="section-header">
+            <h2><i class="fas fa-users"></i> Available Candidates</h2>
+            <p class="section-subtitle">Review candidates and cast your vote</p>
+          </div>
+          <div id="candidateList" class="candidates-grid"></div>
+        </section>
+
+        <!-- Enhanced Vote Counts & Analytics Section -->
+        <section id="counts" class="card counts-card hidden">
+          <div class="section-header">
+            <h2><i class="fas fa-chart-bar"></i> Live Vote Analytics</h2>
+            <p class="section-subtitle">Real-time voting statistics and results</p>
+          </div>
+          <div class="counts-container">
+            <div id="countList" class="count-list"></div>
+            <div class="chart-container hidden" id="chartWrapper">
+              <canvas id="voteChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- Enhanced Admin Panel -->
+        <section id="adminPanel" class="card admin-panel-card hidden">
+          <div class="section-header">
+            <h2><i class="fas fa-cog"></i> Admin Control Dashboard</h2>
+            <p class="section-subtitle">Manage candidates and system settings</p>
+          </div>
+          <div class="admin-content">
+            <div class="admin-card add-candidate-section">
+              <div class="admin-card-header">
+                <h3><i class="fas fa-user-plus"></i> Add New Candidate</h3>
+              </div>
+              <form id="addCandidateForm" class="admin-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="candName">
+                      <i class="fas fa-user"></i> Candidate Name
+                    </label>
+                    <input id="candName" type="text" placeholder="Full name" />
+                  </div>
+                  <div class="form-group">
+                    <label for="candParty">
+                      <i class="fas fa-flag"></i> Political Party
+                    </label>
+                    <input id="candParty" type="text" placeholder="Party name" />
+                  </div>
+                  <div class="form-group">
+                    <label for="candAge">
+                      <i class="fas fa-birthday-cake"></i> Age
+                    </label>
+                    <input id="candAge" type="number" placeholder="Age" min="21" max="100" />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="fas fa-plus-circle"></i> Add Candidate
+                </button>
+              </form>
+              <div id="adminMsg" class="message-box"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p>&copy; 2026 Vote Hub. Secure Democratic Voting Platform. All rights reserved.</p>
+        <div class="footer-links">
+          <span><i class="fas fa-shield-alt"></i> Secure</span>
+          <span><i class="fas fa-lock"></i> Encrypted</span>
+          <span><i class="fas fa-check"></i> Verified</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
