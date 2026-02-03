@@ -1,3 +1,5 @@
+const BASE_URL = "https://voting-hub.onrender.com";
+
 function show(id){ document.getElementById(id).classList.remove('hidden'); }
 function hide(id){ document.getElementById(id).classList.add('hidden'); }
 
@@ -8,7 +10,7 @@ async function fetchCandidates(){
   const list = document.getElementById('candidateList');
   list.innerHTML = '<div style="text-align:center;color:#6b7280;padding:40px">Loading candidates...</div>';
   try{
-    const res = await fetch('/candidate');
+    const res = await fetch(`${BASE_URL}/candidate`);
     const data = await res.json();
     list.innerHTML = '';
     if(data.length === 0){
@@ -54,18 +56,16 @@ async function fetchCandidates(){
 async function fetchCounts(){
   const list = document.getElementById('countList');
   try{
-    const res = await fetch('/candidate/vote/count');
+    const res = await fetch(`${BASE_URL}/candidate/vote/count`);
     const data = await res.json();
     list.innerHTML = '';
     if(data.length === 0){
       list.innerHTML = '<div style="text-align:center;color:#6b7280;padding:20px">No votes recorded yet</div>';
       return;
     }
-    
-    // Calculate total votes
+
     const totalVotes = data.reduce((sum, item) => sum + item.count, 0);
-    
-    // Add total votes header
+
     const headerDiv = document.createElement('div');
     headerDiv.className = 'vote-count-header';
     headerDiv.innerHTML = `
@@ -75,11 +75,10 @@ async function fetchCounts(){
       </div>
     `;
     list.appendChild(headerDiv);
-    
-    // Create a container for vote items
+
     const itemsContainer = document.createElement('div');
     itemsContainer.className = 'vote-items-container';
-    
+
     data.forEach(item=>{
       const percentage = totalVotes > 0 ? ((item.count / totalVotes) * 100).toFixed(1) : 0;
       const div = document.createElement('div');
@@ -103,10 +102,9 @@ async function fetchCounts(){
       `;
       itemsContainer.appendChild(div);
     });
-    
+
     list.appendChild(itemsContainer);
-    
-    // if admin chart exists, update it
+
     if(typeof Chart !== 'undefined' && document.getElementById('voteChart')){
       try{ 
         document.getElementById('chartWrapper').classList.remove('hidden');
@@ -118,7 +116,6 @@ async function fetchCounts(){
   }
 }
 
-// Chart handling (admin only)
 let voteChart = null;
 function updateChart(data){
   const labels = data.map(d=>d.party);
@@ -127,48 +124,8 @@ function updateChart(data){
   if(!voteChart){
     voteChart = new Chart(ctx, {
       type: 'bar',
-      data: {
-        labels,
-        datasets: [{ 
-          label: 'Total Votes', 
-          data: counts, 
-          backgroundColor: [
-            'rgba(37, 99, 235, 0.8)',
-            'rgba(16, 185, 129, 0.8)',
-            'rgba(239, 68, 68, 0.8)',
-            'rgba(245, 158, 11, 0.8)',
-            'rgba(168, 85, 247, 0.8)',
-            'rgba(236, 72, 153, 0.8)'
-          ],
-          borderColor: [
-            'rgba(37, 99, 235, 1)',
-            'rgba(16, 185, 129, 1)',
-            'rgba(239, 68, 68, 1)',
-            'rgba(245, 158, 11, 1)',
-            'rgba(168, 85, 247, 1)',
-            'rgba(236, 72, 153, 1)'
-          ],
-          borderWidth: 2,
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' }
-        },
-        scales: { 
-          y: { 
-            beginAtZero: true,
-            ticks: { stepSize: 1 },
-            grid: { color: 'rgba(0,0,0,0.05)' }
-          },
-          x: {
-            grid: { display: false }
-          }
-        }
-      }
+      data: { labels, datasets: [{ label: 'Total Votes', data: counts }] },
+      options: { responsive: true, maintainAspectRatio: false }
     });
   }else{
     voteChart.data.labels = labels;
@@ -182,7 +139,7 @@ async function voteCandidate(id){
   const token = localStorage.getItem('token');
   if(!token){ alert('Please login first'); return }
   try{
-    const res = await fetch(`/candidate/vote/${id}`, {
+    const res = await fetch(`${BASE_URL}/candidate/vote/${id}`, {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + token }
     });
@@ -198,10 +155,9 @@ async function voteCandidate(id){
   }
 }
 
-// authentication helpers
 async function fetchProfile(token){
   try{
-    const res = await fetch('/user/profile', { headers: { 'Authorization': 'Bearer ' + token }});
+    const res = await fetch(`${BASE_URL}/user/profile`, { headers: { 'Authorization': 'Bearer ' + token }});
     if(!res.ok) return null;
     const json = await res.json();
     return json.user || null;
@@ -213,23 +169,14 @@ async function setLoggedIn(token){
   if(profile){
     document.getElementById('userName').textContent = profile.name || 'User';
     const roleElement = document.getElementById('userRole');
-    if(roleElement) {
-      roleElement.textContent = profile.role === 'admin' ? 'Administrator' : 'Voter';
-    }
+    if(roleElement) roleElement.textContent = profile.role === 'admin' ? 'Administrator' : 'Voter';
     currentUserRole = profile.role || null;
-    hide('auth');
-    hide('roleSelect');
-    show('userPanel');
-    show('mainContent');
-    show('candidates');
-    // Show admin panel and vote counts only to admin users
-    if(currentUserRole === 'admin'){
-      show('counts');
-      show('adminPanel');
-    }else{
-      hide('counts');
-      hide('adminPanel');
-    }
+
+    hide('auth'); hide('roleSelect'); show('userPanel'); show('mainContent'); show('candidates');
+
+    if(currentUserRole === 'admin'){ show('counts'); show('adminPanel'); }
+    else{ hide('counts'); hide('adminPanel'); }
+
     fetchCandidates();
     fetchCounts();
     setInterval(fetchCounts, 10000);
@@ -241,19 +188,11 @@ async function setLoggedIn(token){
 
 function setLoggedOut(){
   localStorage.removeItem('token');
-  // Reset UI to role selection
-  hide('auth');
-  hide('userPanel');
-  hide('mainContent');
-  hide('candidates');
-  hide('counts');
-  hide('adminPanel');
+  hide('auth'); hide('userPanel'); hide('mainContent'); hide('candidates'); hide('counts'); hide('adminPanel');
   show('roleSelect');
 }
 
-// login
-const loginForm = document.getElementById('loginForm');
-loginForm.addEventListener('submit', async (e)=>{
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const aadhar = document.getElementById('aadhar').value.trim();
   const password = document.getElementById('password').value;
@@ -261,25 +200,22 @@ loginForm.addEventListener('submit', async (e)=>{
   msg.textContent = '';
   msg.className = 'message-box';
   try{
-    const res = await fetch('/user/login', {
+    const res = await fetch(`${BASE_URL}/user/login`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({aadharCardNumber: aadhar, password})
     });
     const json = await res.json();
     if(res.ok && json.token){
-      // validate role selection: if user chose Admin but account isn't admin, reject
       const profile = await fetchProfile(json.token);
       if(selectedRole === 'admin' && profile && profile.role !== 'admin'){
         msg.className = 'message-box error';
-        msg.textContent = '❌ This account is not an admin. Please login as a voter or use an admin account.';
+        msg.textContent = '❌ This account is not an admin.';
         return;
       }
-
-      // save token and continue
       localStorage.setItem('token', json.token);
       msg.className = 'message-box success';
-      msg.textContent = '✓ Login successful! Redirecting...';
+      msg.textContent = '✓ Login successful!';
       setTimeout(()=>setLoggedIn(json.token), 500);
     }else{
       msg.className = 'message-box error';
@@ -287,16 +223,12 @@ loginForm.addEventListener('submit', async (e)=>{
     }
   }catch(err){
     msg.className = 'message-box error';
-    msg.textContent = '❌ Login request failed. Please try again.';
+    msg.textContent = '❌ Login request failed.';
   }
 });
 
-// logout
-document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  setLoggedOut();
-});
+document.getElementById('logoutBtn').addEventListener('click', ()=> setLoggedOut());
 
-// admin actions
 async function addCandidate(e){
   e.preventDefault();
   const name = document.getElementById('candName').value.trim();
@@ -306,13 +238,9 @@ async function addCandidate(e){
   const msg = document.getElementById('adminMsg');
   msg.textContent = '';
   msg.className = 'message-box';
-  if(!name||!party){ 
-    msg.className = 'message-box error';
-    msg.textContent = '❌ Name and Party are required'; 
-    return 
-  }
+  if(!name||!party){ msg.className = 'message-box error'; msg.textContent = '❌ Name and Party required'; return }
   try{
-    const res = await fetch('/candidate', {
+    const res = await fetch(`${BASE_URL}/candidate`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ name, party, age })
@@ -320,55 +248,39 @@ async function addCandidate(e){
     const json = await res.json();
     if(res.ok){
       msg.className = 'message-box success';
-      msg.textContent = '✓ Candidate added successfully!';
+      msg.textContent = '✓ Candidate added!';
       document.getElementById('addCandidateForm').reset();
-      setTimeout(()=>{
-        fetchCandidates();
-        msg.textContent = '';
-      }, 1500);
+      fetchCandidates();
     }else{
       msg.className = 'message-box error';
-      msg.textContent = '❌ ' + (json.error || json.message || 'Failed to add candidate');
+      msg.textContent = '❌ ' + (json.error || 'Failed');
     }
-  }catch(err){ 
-    msg.className = 'message-box error';
-    msg.textContent = '❌ Request failed. Please try again.'; 
-  }
+  }catch(err){ msg.className = 'message-box error'; msg.textContent = '❌ Request failed'; }
 }
 
 async function deleteCandidate(id){
-  if(!confirm('Are you sure you want to delete this candidate?')) return;
+  if(!confirm('Delete this candidate?')) return;
   const token = localStorage.getItem('token');
   try{
-    const res = await fetch('/candidate/' + id, { method: 'DELETE', headers: { 'Authorization':'Bearer ' + token }});
-    if(res.ok){ 
-      fetchCandidates(); 
-      fetchCounts();
-      alert('✓ Candidate deleted successfully');
-    }
-    else{ alert('❌ Delete failed'); }
+    const res = await fetch(`${BASE_URL}/candidate/` + id, { method: 'DELETE', headers: { 'Authorization':'Bearer ' + token }});
+    if(res.ok){ fetchCandidates(); fetchCounts(); alert('✓ Deleted'); }
+    else alert('❌ Delete failed');
   }catch(err){ alert('❌ Request failed'); }
 }
 
 document.getElementById('addCandidateForm').addEventListener('submit', addCandidate);
 
-// init
 const token = localStorage.getItem('token');
 if(token){ setLoggedIn(token); } else { setLoggedOut(); }
 
-// role selection handlers
 document.getElementById('roleVoter').addEventListener('click', ()=>{
   selectedRole = 'voter';
-  const lbl = document.getElementById('roleLabel');
-  if(lbl) lbl.textContent = 'Login (Voter)';
-  hide('roleSelect');
-  show('auth');
+  document.getElementById('roleLabel').textContent = 'Login (Voter)';
+  hide('roleSelect'); show('auth');
 });
 
 document.getElementById('roleAdmin').addEventListener('click', ()=>{
   selectedRole = 'admin';
-  const lbl = document.getElementById('roleLabel');
-  if(lbl) lbl.textContent = 'Login (Admin)';
-  hide('roleSelect');
-  show('auth');
+  document.getElementById('roleLabel').textContent = 'Login (Admin)';
+  hide('roleSelect'); show('auth');
 });
