@@ -1,4 +1,6 @@
-const BASE_URL = "https://voting-hub.onrender.com";
+//const BASE_URL = "https://voting-hub.onrender.com";
+const BASE_URL = "https://voting-hub-backend.onrender.com";
+
 
 function show(id){ document.getElementById(id).classList.remove('hidden'); }
 function hide(id){ document.getElementById(id).classList.add('hidden'); }
