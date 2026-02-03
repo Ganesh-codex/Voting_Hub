@@ -20,6 +20,7 @@ const db = mongoose.connection;
 
 db.on('connected', () => {
     console.log('Connected to MongoDB server');
+     console.log("Database Name:", mongoose.connection.name);
 });
 
 db.on('error', (err) => {
