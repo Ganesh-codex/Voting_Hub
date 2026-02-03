@@ -1,12 +1,19 @@
-const express = require('express')
+const express = require('express');
 const path = require('path');
+const cors = require('cors');          // ✅ ADD THIS
 const app = express();
 const db = require('./db');
 require('dotenv').config();
 
-const bodyParser = require('body-parser'); 
-app.use(bodyParser.json()); // req.body
-const PORT = process.env.PORT || 3000;
+// ✅ ENABLE CORS (VERY IMPORTANT)
+app.use(cors({
+    origin: '*',
+    methods: ['GET','POST','PUT','DELETE'],
+    allowedHeaders: ['Content-Type','Authorization']
+}));
+
+app.use(express.json());               // better than bodyParser
+const PORT = process.env.PORT || 3000; // fallback port
 
 // Import the router files
 const userRoutes = require('./routes/userRoutes');
@@ -16,23 +23,14 @@ const candidateRoutes = require('./routes/candidateRoutes');
 app.use('/user', userRoutes);
 app.use('/candidate', candidateRoutes);
 
-// Serve frontend static files from /client
-// app.use(express.static(path.join(__dirname, 'client')));
-
-// // Fallback to index.html for client-side routing (keep after API routes)
-// app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'client', 'index.html'));
-// });
-// Serve frontend static files from Frontend folder
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-// Fallback to index.html for all non-API routes
+// Fallback to index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend', 'index.html'));
 });
 
-
-
-app.listen(PORT, ()=>{
-    console.log('listening on port 3000');
-})
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
