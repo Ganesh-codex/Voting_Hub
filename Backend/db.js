@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // Define the MongoDB connection URL
 // Use environment variable if provided, otherwise default to local MongoDB
-const mongoURL = process.env.MONGODB_URL_LOCAL || 'mongodb://127.0.0.1:27017/voting_app'
+const mongoURL = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/voting_app'
 // const mongoURL = process.env.MONGODB_URL;
 
 // Set up MongoDB connection
