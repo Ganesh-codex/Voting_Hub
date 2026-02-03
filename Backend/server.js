@@ -1,11 +1,11 @@
 const express = require('express');
 const path = require('path');
-const cors = require('cors');          // ✅ ADD THIS
+const cors = require('cors');          
 const app = express();
 const db = require('./db');
 require('dotenv').config();
 
-// ✅ ENABLE CORS (VERY IMPORTANT)
+
 app.use(cors({
     origin: '*',
     methods: ['GET','POST','PUT','DELETE'],
