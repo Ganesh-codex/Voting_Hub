@@ -1,9 +1,28 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const cors = require('cors');          
+const cors = require('cors');
+const http = require('http');
+const socketIO = require('socket.io');          
 const app = express();
 const db = require('./db');
+
+
+const server = http.createServer(app);
+const io = socketIO(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+    }
+});
+
+
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+
 
 
 app.use(cors({
@@ -12,8 +31,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type','Authorization']
 }));
 
-app.use(express.json());               // better than bodyParser
-const PORT = process.env.PORT || 3000; // fallback port
+app.use(express.json());               
+const PORT = process.env.PORT || 3000; 
 
 // Import the router files
 const userRoutes = require('./routes/userRoutes');
@@ -23,6 +42,19 @@ const candidateRoutes = require('./routes/candidateRoutes');
 app.use('/user', userRoutes);
 app.use('/candidate', candidateRoutes);
 
+
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
+    // Send current client count
+    io.emit('clientCount', io.engine.clientsCount);
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+        io.emit('clientCount', io.engine.clientsCount);
+    });
+});
+
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
@@ -31,6 +63,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend', 'index.html'));
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

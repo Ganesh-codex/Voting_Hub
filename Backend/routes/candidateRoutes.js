@@ -4,6 +4,13 @@ const User = require('../models/user');
 const {jwtAuthMiddleware, generateToken} = require('../jwt');
 const Candidate = require('../models/candidate');
 
+let io; 
+
+
+router.use((req, res, next) => {
+    io = req.io;
+    next();
+});
 
 const checkAdminRole = async (userID) => {
    try{
@@ -30,6 +37,19 @@ router.post('/', jwtAuthMiddleware, async (req, res) =>{
         // Save the new user to the database
         const response = await newCandidate.save();
         console.log('data saved');
+        
+        
+        if (io) {
+            io.emit('candidateAdded', {
+                _id: response._id,
+                name: response.name,
+                party: response.party,
+                age: response.age,
+                voteCount: response.voteCount
+            });
+            console.log('Emitted candidateAdded event');
+        }
+        
         res.status(200).json({response: response});
     }
     catch(err){
@@ -56,6 +76,19 @@ router.put('/:candidateID', jwtAuthMiddleware, async (req, res)=>{
         }
 
         console.log('candidate data updated');
+        
+        // Emit real-time event to all clients
+        if (io) {
+            io.emit('candidateUpdated', {
+                _id: response._id,
+                name: response.name,
+                party: response.party,
+                age: response.age,
+                voteCount: response.voteCount
+            });
+            console.log('Emitted candidateUpdated event');
+        }
+        
         res.status(200).json(response);
     }catch(err){
         console.log(err);
@@ -77,6 +110,16 @@ router.delete('/:candidateID', jwtAuthMiddleware, async (req, res)=>{
         }
 
         console.log('candidate deleted');
+        
+        // Emit real-time event to all clients
+        if (io) {
+            io.emit('candidateDeleted', {
+                _id: response._id,
+                name: response.name
+            });
+            console.log('Emitted candidateDeleted event');
+        }
+        
         res.status(200).json(response);
     }catch(err){
         console.log(err);
@@ -136,6 +179,17 @@ router.get('/vote/:candidateID', jwtAuthMiddleware, async (req, res)=>{
         user.isVoted = true
         await user.save();
 
+        // Emit real-time event to all clients
+        if (io) {
+            io.emit('voteRecorded', {
+                candidateID: candidate._id,
+                candidateName: candidate.name,
+                newVoteCount: candidate.voteCount,
+                party: candidate.party
+            });
+            console.log('Emitted voteRecorded event');
+        }
+
         return res.status(200).json({ message: 'Vote recorded successfully' });
     }catch(err){
         console.log(err);
@@ -147,7 +201,7 @@ router.get('/vote/:candidateID', jwtAuthMiddleware, async (req, res)=>{
 router.get('/', async (req, res) => {
     try {
         // Find all candidates and select name and party (include _id by default)
-        const candidates = await Candidate.find({}, 'name party');
+        const candidates = await Candidate.find({}, 'name party age voteCount');
 
         // Return the list of candidates
         res.status(200).json(candidates);
