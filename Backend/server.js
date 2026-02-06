@@ -32,7 +32,7 @@ app.use(cors({
 }));
 
 app.use(express.json());               
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000; // fallback port
 
 // Import the router files
 const userRoutes = require('./routes/userRoutes');
