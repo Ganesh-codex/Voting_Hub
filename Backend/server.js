@@ -12,7 +12,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type','Authorization']
 }));
 
-app.use(express.json());               // better than bodyParser
+app.use(express.json());               
 const PORT = process.env.PORT || 3000; // fallback port
 
 // Import the router files
