@@ -1,6 +1,55 @@
-//const BASE_URL = "https://voting-hub.onrender.com";
+
 const BASE_URL = "https://voting-hub-1.onrender.com";
 
+// WebSocket Connection
+let socket = null;
+
+function connectWebSocket() {
+  if (socket && socket.connected) return;
+  
+  socket = io(BASE_URL, {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 5
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected to WebSocket:', socket.id);
+  });
+
+ 
+  socket.on('candidateAdded', (candidate) => {
+    console.log('New candidate added:', candidate);
+    fetchCandidates();
+  });
+
+  
+  socket.on('candidateDeleted', (data) => {
+    console.log('Candidate deleted:', data);
+    fetchCandidates();
+  });
+
+  
+  socket.on('candidateUpdated', (candidate) => {
+    console.log('Candidate updated:', candidate);
+    fetchCandidates();
+  });
+
+  
+  socket.on('voteRecorded', (data) => {
+    console.log('Vote recorded for:', data.candidateName);
+    fetchCounts();
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Disconnected from WebSocket');
+  });
+
+  socket.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+}
 
 function show(id){ document.getElementById(id).classList.remove('hidden'); }
 function hide(id){ document.getElementById(id).classList.add('hidden'); }
@@ -173,6 +222,9 @@ async function setLoggedIn(token){
     const roleElement = document.getElementById('userRole');
     if(roleElement) roleElement.textContent = profile.role === 'admin' ? 'Administrator' : 'Voter';
     currentUserRole = profile.role || null;
+
+    // Connect to WebSocket when user logs in
+    connectWebSocket();
 
     hide('auth'); hide('roleSelect'); show('userPanel'); show('mainContent'); show('candidates');
 
